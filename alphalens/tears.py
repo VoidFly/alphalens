@@ -203,11 +203,11 @@ def create_returns_tear_sheet(
     by_group : bool
         If True, display graphs separately for each group.
     """
-
+    #get factor_weighted forward returns
     factor_returns = perf.factor_returns(
         factor_data, long_short, group_neutral
     )
-
+    #get forward return(not weighted) mean, grouped by factor quantile, shape(num_of_quantiles,num_of_periods)
     mean_quant_ret, std_quantile = perf.mean_return_by_quantile(
         factor_data,
         by_group=False,
@@ -218,7 +218,7 @@ def create_returns_tear_sheet(
     mean_quant_rateret = mean_quant_ret.apply(
         utils.rate_of_return, axis=0, base_period=mean_quant_ret.columns[0]
     )
-
+    
     mean_quant_ret_bydate, std_quant_daily = perf.mean_return_by_quantile(
         factor_data,
         by_date=True,
@@ -431,8 +431,9 @@ def create_turnover_tear_sheet(factor_data, turnover_periods=None):
     if turnover_periods is None:
         input_periods = utils.get_forward_returns_columns(
             factor_data.columns, require_exact_day_multiple=True,
-        ).get_values()
-        turnover_periods = utils.timedelta_strings_to_integers(input_periods)
+        )
+        #input_periods=input_periods.get_values()
+        turnover_periods = utils.timedelta_strings_to_integers(input_periods)#[1,5,10]
     else:
         turnover_periods = utils.timedelta_strings_to_integers(
             turnover_periods,

@@ -260,6 +260,7 @@ def compute_forward_returns(factor,
     """
 
     factor_dateindex = factor.index.levels[0]
+    #print(factor_dateindex.tz) tz=TimeZone
     if factor_dateindex.tz != prices.index.tz:
         raise NonMatchingTimezoneError("The timezone of 'factor' is not the "
                                        "same as the timezone of 'prices'. See "
@@ -302,7 +303,7 @@ def compute_forward_returns(factor,
         # Find the period length, which will be the column name. We'll test
         # several entries in order to find out the most likely period length
         # (in case the user passed inconsinstent data)
-        #
+        #?
         days_diffs = []
         for i in range(30):
             if i >= len(forward_returns.index):
@@ -334,11 +335,13 @@ def compute_forward_returns(factor,
     )
     df = df.reindex(factor.index)
 
+    #?
     # now set the columns correctly
     df = df[column_list]
-
-    df.index.levels[0].freq = freq
+    #df.index.levels[0].freq = freq
     df.index.set_names(['date', 'asset'], inplace=True)
+    #The freq needs to be assigned after index.set_names. Otherwise the freq will be None(overitted)
+    df.index.levels[0].freq = freq
 
     return df
 
