@@ -203,7 +203,7 @@ def create_returns_tear_sheet(
     by_group : bool
         If True, display graphs separately for each group.
     """
-    #get factor_weighted forward returns
+    #get factor_weighted forward returns (date,periods)
     factor_returns = perf.factor_returns(
         factor_data, long_short, group_neutral
     )
@@ -214,11 +214,11 @@ def create_returns_tear_sheet(
         demeaned=long_short,
         group_adjust=group_neutral,
     )
-
+    #(quantile,periods)
     mean_quant_rateret = mean_quant_ret.apply(
         utils.rate_of_return, axis=0, base_period=mean_quant_ret.columns[0]
     )
-    
+    #([quantile,date],periods)
     mean_quant_ret_bydate, std_quant_daily = perf.mean_return_by_quantile(
         factor_data,
         by_date=True,
@@ -226,21 +226,21 @@ def create_returns_tear_sheet(
         demeaned=long_short,
         group_adjust=group_neutral,
     )
-
+    #([quantile,date],periods)
     mean_quant_rateret_bydate = mean_quant_ret_bydate.apply(
         utils.rate_of_return,
         axis=0,
         base_period=mean_quant_ret_bydate.columns[0],
     )
-
+    #([quantile,date],periods)
     compstd_quant_daily = std_quant_daily.apply(
         utils.std_conversion, axis=0, base_period=std_quant_daily.columns[0]
     )
-
+    #(2,periods)
     alpha_beta = perf.factor_alpha_beta(
         factor_data, factor_returns, long_short, group_neutral
     )
-
+    #(dates,periods) max gets the max number of quantile, not the quantile having max return value
     mean_ret_spread_quant, std_spread_quant = perf.compute_mean_returns_spread(
         mean_quant_rateret_bydate,
         factor_data["factor_quantile"].max(),
@@ -255,6 +255,13 @@ def create_returns_tear_sheet(
     plotting.plot_returns_table(
         alpha_beta, mean_quant_rateret, mean_ret_spread_quant
     )
+
+    #TODO compute 技术指标表： wd_forward_return1D, Q1 forward_return Q2_forward_return 
+    technique_index=perf.compute_technique_index(
+        factor_returns,
+        mean_quant_ret_bydate
+    )
+    
 
     plotting.plot_quantile_returns_bar(
         mean_quant_rateret,
@@ -296,6 +303,12 @@ def create_returns_tear_sheet(
     ax_mean_quantile_returns_spread_ts = [
         gf.next_row() for x in range(fr_cols)
     ]
+
+    title='Top Minus Bottom Quantile Cumulative Return (1D Period)'
+    plotting.plot_cumulative_returns(
+        mean_ret_spread_quant['1D'],period="1D", title=title, ax=gf.next_row()
+    )
+    #mean_ret_spread_quant is actually "mean_RateRet_spread_quant"
     plotting.plot_mean_quantile_returns_spread_time_series(
         mean_ret_spread_quant,
         std_err=std_spread_quant,

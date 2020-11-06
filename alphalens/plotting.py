@@ -136,9 +136,9 @@ def plot_returns_table(alpha_beta,
                        mean_ret_spread_quantile):
     returns_table = pd.DataFrame()
     returns_table = returns_table.append(alpha_beta)
-    returns_table.loc["Mean Period Wise Return Top Quantile (bps)"] = \
+    returns_table.loc["Mean Period Wise RateReturn Top Quantile (bps)"] = \
         mean_ret_quantile.iloc[-1] * DECIMAL_TO_BPS
-    returns_table.loc["Mean Period Wise Return Bottom Quantile (bps)"] = \
+    returns_table.loc["Mean Period Wise RateReturn Bottom Quantile (bps)"] = \
         mean_ret_quantile.iloc[0] * DECIMAL_TO_BPS
     returns_table.loc["Mean Period Wise Spread (bps)"] = \
         mean_ret_spread_quantile.mean() * DECIMAL_TO_BPS
@@ -388,7 +388,7 @@ def plot_quantile_returns_bar(mean_ret_by_q,
                 .multiply(DECIMAL_TO_BPS)
                 .plot(kind='bar', title=sc, ax=a))
 
-            a.set(xlabel='', ylabel='Mean Return (bps)',
+            a.set(xlabel='', ylabel='Mean RateReturn (bps)',
                   ylim=(ymin, ymax))
 
         if num_group < len(ax):
@@ -402,8 +402,8 @@ def plot_quantile_returns_bar(mean_ret_by_q,
 
         (mean_ret_by_q.multiply(DECIMAL_TO_BPS)
             .plot(kind='bar',
-                  title="Mean Period Wise Return By Factor Quantile", ax=ax))
-        ax.set(xlabel='', ylabel='Mean Return (bps)',
+                  title="Mean Period Wise RateReturn By Factor Quantile", ax=ax))
+        ax.set(xlabel='', ylabel='Mean RateReturn (bps)',
                ylim=(ymin, ymax))
 
         return ax
@@ -460,8 +460,8 @@ def plot_quantile_returns_violin(return_by_q,
                    cut=0,
                    inner='quartile',
                    ax=ax)
-    ax.set(xlabel='', ylabel='Return (bps)',
-           title="Period Wise Return By Factor Quantile",
+    ax.set(xlabel='', ylabel='RateReturn (bps)',
+           title="Period Wise RateReturn By Factor Quantile",
            ylim=(ymin, ymax))
 
     ax.axhline(0.0, linestyle='-', color='black', lw=0.7, alpha=0.6)
