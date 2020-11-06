@@ -259,6 +259,7 @@ def create_returns_tear_sheet(
     technique_index=perf.compute_technique_index(
         factor_returns,
         mean_quant_ret_bydate,
+        mean_ret_spread_quant,
         year_wise=False
     )
     utils.print_table(technique_index)
@@ -266,6 +267,7 @@ def create_returns_tear_sheet(
     year_technique_index=perf.compute_technique_index(
         factor_returns,
         mean_quant_ret_bydate,
+        mean_ret_spread_quant,
         year_wise=True
     )
     utils.print_table(year_technique_index)
@@ -289,6 +291,10 @@ def create_returns_tear_sheet(
             UserWarning,
         )
 
+    title='Top Minus Bottom Quantile Cumulative Return (1D Period)'
+    plotting.plot_cumulative_returns(
+        mean_ret_spread_quant['1D'],period="1D", title=title, ax=gf.next_row()
+    )
     # Compute cumulative returns from daily simple returns, if '1D'
     # returns are provided.
     if "1D" in factor_returns:
@@ -306,11 +312,6 @@ def create_returns_tear_sheet(
         plotting.plot_cumulative_returns_by_quantile(
             mean_quant_ret_bydate["1D"], period="1D", ax=gf.next_row()
         )
-
-    title='Top Minus Bottom Quantile Cumulative Return (1D Period)'
-    plotting.plot_cumulative_returns(
-        mean_ret_spread_quant['1D'],period="1D", title=title, ax=gf.next_row()
-    )
 
     ax_mean_quantile_returns_spread_ts = [
         gf.next_row() for x in range(fr_cols)

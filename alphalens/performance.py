@@ -519,12 +519,15 @@ def mean_return_by_quantile(factor_data,
 def compute_technique_index(
                             factor_returns,
                             mean_quant_ret_bydate,
+                            mean_ret_spread_quant,
                             year_wise=False):
     """
     compute techique indexes (on 1 day return period)
     """
     quantile_wise_return=mean_quant_ret_bydate['1D'].unstack().T
-    cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns={'1D':'Factor_Weighted Return'})
+    cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns={'1D':'Factor_Weighted Return'}).join(mean_ret_spread_quant['1D']).rename(columns={'1D':'Top_minus_Bottom Return'})
+                                    
+                                    
     if year_wise:
         return cmb.resample('Y').apply([ep.annual_return,
                                     ep.max_drawdown,
