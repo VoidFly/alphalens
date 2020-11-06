@@ -516,6 +516,19 @@ def mean_return_by_quantile(factor_data,
 
     return mean_ret, std_error_ret
 
+def compute_technique_index(
+                            factor_returns,
+                            mean_quant_ret_bydate):
+    """
+    """
+    quantile_wise_return=mean_quant_ret_bydate['1D'].unstack().T
+    print(quantile_wise_return.head())
+
+    cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns={'1D':'weighted_factor_return'})
+    print(cmb.head())
+    
+
+                            
 
 def compute_mean_returns_spread(mean_returns,
                                 upper_quant,
