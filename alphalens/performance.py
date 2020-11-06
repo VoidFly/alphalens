@@ -518,17 +518,26 @@ def mean_return_by_quantile(factor_data,
 
 def compute_technique_index(
                             factor_returns,
-                            mean_quant_ret_bydate):
+                            mean_quant_ret_bydate,
+                            year_wise=False):
     """
+    compute techique indexes (on 1 day return period)
     """
     quantile_wise_return=mean_quant_ret_bydate['1D'].unstack().T
-    print(quantile_wise_return.head())
+    cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns={'1D':'Factor_Weighted Return'})
+    if year_wise:
+        return cmb.resample('Y').apply([ep.annual_return,
+                                    ep.max_drawdown,
+                                    ep.sharpe_ratio,
+                                    ep.sortino_ratio,
+                                    ep.calmar_ratio]).stack(level=0)   
+    else:
+        return cmb.apply([ep.annual_return,
+                            ep.max_drawdown,
+                            ep.sharpe_ratio,
+                            ep.sortino_ratio,
+                            ep.calmar_ratio]).T 
 
-    cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns={'1D':'weighted_factor_return'})
-    print(cmb.head())
-    
-
-                            
 
 def compute_mean_returns_spread(mean_returns,
                                 upper_quant,
@@ -943,7 +952,7 @@ def factor_cumulative_returns(factor_data,
     returns = \
         factor_returns(portfolio_data, long_short, group_neutral, equal_weight)
 
-    return cumulative_returns(returns[period], period)
+    return cumulative_returns(returns[period])
 
 
 def factor_positions(factor_data,

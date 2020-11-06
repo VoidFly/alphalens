@@ -256,12 +256,19 @@ def create_returns_tear_sheet(
         alpha_beta, mean_quant_rateret, mean_ret_spread_quant
     )
 
-    #TODO compute 技术指标表： wd_forward_return1D, Q1 forward_return Q2_forward_return 
     technique_index=perf.compute_technique_index(
         factor_returns,
-        mean_quant_ret_bydate
+        mean_quant_ret_bydate,
+        year_wise=False
     )
-    
+    utils.print_table(technique_index)
+
+    year_technique_index=perf.compute_technique_index(
+        factor_returns,
+        mean_quant_ret_bydate,
+        year_wise=True
+    )
+    utils.print_table(year_technique_index)
 
     plotting.plot_quantile_returns_bar(
         mean_quant_rateret,
@@ -300,14 +307,14 @@ def create_returns_tear_sheet(
             mean_quant_ret_bydate["1D"], period="1D", ax=gf.next_row()
         )
 
-    ax_mean_quantile_returns_spread_ts = [
-        gf.next_row() for x in range(fr_cols)
-    ]
-
     title='Top Minus Bottom Quantile Cumulative Return (1D Period)'
     plotting.plot_cumulative_returns(
         mean_ret_spread_quant['1D'],period="1D", title=title, ax=gf.next_row()
     )
+
+    ax_mean_quantile_returns_spread_ts = [
+        gf.next_row() for x in range(fr_cols)
+    ]
     #mean_ret_spread_quant is actually "mean_RateRet_spread_quant"
     plotting.plot_mean_quantile_returns_spread_time_series(
         mean_ret_spread_quant,
@@ -531,11 +538,11 @@ def create_full_tear_sheet(factor_data,
     """
 
     plotting.plot_quantile_statistics_table(factor_data)
-    create_returns_tear_sheet(
-        factor_data, long_short, group_neutral, by_group, set_context=False
-    )
     create_information_tear_sheet(
         factor_data, group_neutral, by_group, set_context=False
+    )
+    create_returns_tear_sheet(
+        factor_data, long_short, group_neutral, by_group, set_context=False
     )
     create_turnover_tear_sheet(factor_data, set_context=False)
 
