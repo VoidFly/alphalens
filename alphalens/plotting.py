@@ -798,7 +798,7 @@ def plot_cumulative_returns_by_quantile(quantile_returns,
     cum_ret.plot(lw=2, ax=ax, cmap=cm.coolwarm)
     ax.legend()
     ymin, ymax = cum_ret.min().min(), cum_ret.max().max()
-    ax.set(ylabel='Log Cumulative Returns',
+    ax.set(ylabel='Cumulative Returns',
            title='''Cumulative Return by Quantile
                     ({} Period Forward Return)'''.format(period),
            xlabel='',
