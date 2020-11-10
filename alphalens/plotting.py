@@ -819,29 +819,21 @@ def plot_cumulative_returns_by_top_mkt(mean_quant_ret_bydate,
                                         freq=None,
                                         ax=None):
     """
-    Plots the cumulative returns of various factor quantiles.
-
+    Plots the cumulative returns of Top Quantile, Market Index (if you have), Top
+    Quantile minus Market Index.
+    
     Parameters
     ----------
-    quantile_returns : pd.DataFrame
-        Returns by factor quantile
-    period : pandas.Timedelta or string
-        Length of period for which the returns are computed (e.g. 1 day)
-        if 'period' is a string it must follow pandas.Timedelta constructor
-        format (e.g. '1 days', '1D', '30m', '3h', '1D1h', etc)
-    freq : pandas DateOffset
-        Used to specify a particular trading calendar e.g. BusinessDay or Day
-        Usually this is inferred from utils.infer_trading_calendar, which is
-        called by either get_clean_factor_and_forward_returns or
-        compute_forward_returns
+    mean_quant_ret_bydate : pd.DataFrame
+        1D Returns by factor quantile
+    top_minus_index_spread : pd.Series
+    market_index : pd.Series
     ax : matplotlib.Axes, optional
         Axes upon which to plot.
-
     Returns
     -------
     ax : matplotlib.Axes
     """
-
     if ax is None:
         f, ax = plt.subplots(1, 1, figsize=(18, 6))
 
@@ -855,11 +847,11 @@ def plot_cumulative_returns_by_top_mkt(mean_quant_ret_bydate,
 
     cum_ret = ret_wide.apply(perf.cumulative_returns)
 
-    cum_ret.plot(lw=2, ax=ax, cmap=cm.coolwarm)
+    cum_ret.plot(lw=2, ax=ax, colormap='Accent')
     ax.legend()
     ymin, ymax = cum_ret.min().min(), cum_ret.max().max()
     ax.set(ylabel='Cumulative Returns',
-           title='''Cumulative Return by Quantile
+           title='''Cumulative Return by Top Quantile & Market Index
                     ({} Period Forward Return)'''.format(period),
            xlabel='',
            yscale='symlog',
