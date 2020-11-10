@@ -811,6 +811,67 @@ def plot_cumulative_returns_by_quantile(quantile_returns,
 
     return ax
 
+#mean_quant_ret_bydate, top_minus_index_spread, market_index
+def plot_cumulative_returns_by_top_mkt(mean_quant_ret_bydate,
+                                        top_minus_index_spread,
+                                        market_index,
+                                        period='1D',
+                                        freq=None,
+                                        ax=None):
+    """
+    Plots the cumulative returns of various factor quantiles.
+
+    Parameters
+    ----------
+    quantile_returns : pd.DataFrame
+        Returns by factor quantile
+    period : pandas.Timedelta or string
+        Length of period for which the returns are computed (e.g. 1 day)
+        if 'period' is a string it must follow pandas.Timedelta constructor
+        format (e.g. '1 days', '1D', '30m', '3h', '1D1h', etc)
+    freq : pandas DateOffset
+        Used to specify a particular trading calendar e.g. BusinessDay or Day
+        Usually this is inferred from utils.infer_trading_calendar, which is
+        called by either get_clean_factor_and_forward_returns or
+        compute_forward_returns
+    ax : matplotlib.Axes, optional
+        Axes upon which to plot.
+
+    Returns
+    -------
+    ax : matplotlib.Axes
+    """
+
+    if ax is None:
+        f, ax = plt.subplots(1, 1, figsize=(18, 6))
+
+    max_quantile=mean_quant_ret_bydate.index.levels[0].max()
+    max_quantile_ret=mean_quant_ret_bydate.xs(max_quantile,level='factor_quantile')
+    ret_wide=pd.DataFrame({str(max_quantile):max_quantile_ret,
+                            'index':market_index,
+                            'Top_minus_index':top_minus_index_spread
+                            })
+
+
+    cum_ret = ret_wide.apply(perf.cumulative_returns)
+
+    cum_ret.plot(lw=2, ax=ax, cmap=cm.coolwarm)
+    ax.legend()
+    ymin, ymax = cum_ret.min().min(), cum_ret.max().max()
+    ax.set(ylabel='Cumulative Returns',
+           title='''Cumulative Return by Quantile
+                    ({} Period Forward Return)'''.format(period),
+           xlabel='',
+           yscale='symlog',
+           yticks=np.linspace(ymin, ymax, 5),
+           ylim=(ymin, ymax))
+
+    ax.yaxis.set_major_formatter(ScalarFormatter())
+    ax.axhline(1.0, linestyle='-', color='black', lw=1)
+
+    return ax
+
+
 
 def plot_quantile_average_cumulative_return(avg_cumulative_returns,
                                             by_quantile=False,
