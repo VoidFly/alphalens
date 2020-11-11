@@ -177,7 +177,7 @@ def create_summary_tear_sheet(
 
 @plotting.customize
 def create_returns_tear_sheet(
-    factor_data, long_short=True, group_neutral=False, by_group=False
+    factor_data, long_short=True, group_neutral=False, by_group=False,market_index=None
 ):
     """
     Creates a tear sheet for returns analysis of a factor.
@@ -214,11 +214,11 @@ def create_returns_tear_sheet(
         demeaned=long_short,
         group_adjust=group_neutral,
     )
-    #(quantile,periods)
+    #shape (quantile,periods)
     mean_quant_rateret = mean_quant_ret.apply(
         utils.rate_of_return, axis=0, base_period=mean_quant_ret.columns[0]
     )
-    #([quantile,date],periods)
+    #shape ([quantile,date],periods)
     mean_quant_ret_bydate, std_quant_daily = perf.mean_return_by_quantile(
         factor_data,
         by_date=True,
@@ -226,21 +226,37 @@ def create_returns_tear_sheet(
         demeaned=long_short,
         group_adjust=group_neutral,
     )
-    #([quantile,date],periods)
+    #shape ([quantile,date],periods)
     mean_quant_rateret_bydate = mean_quant_ret_bydate.apply(
         utils.rate_of_return,
         axis=0,
         base_period=mean_quant_ret_bydate.columns[0],
     )
-    #([quantile,date],periods)
+    #shape ([quantile,date],periods)
     compstd_quant_daily = std_quant_daily.apply(
         utils.std_conversion, axis=0, base_period=std_quant_daily.columns[0]
     )
-    #(2,periods)
+    #compute alpha_beta using mean factor returns as universal return 
+    #shape (2,periods)
     alpha_beta = perf.factor_alpha_beta(
-        factor_data, factor_returns, long_short, group_neutral
+        factor_data, returns=factor_returns, demeaned=long_short, group_adjust=group_neutral,
+        market_index=None
     )
-    #(dates,periods) max gets the max number of quantile, not the quantile having max return value
+
+    top_minus_index_spread=None
+    if market_index is not None:
+        # compute alpha beta using market index, eg. hs300, as universal return
+        alpha_beta2 = perf.factor_alpha_beta(
+            factor_data, demeaned=long_short, group_adjust=group_neutral,
+            market_index=market_index
+        )
+        alpha_beta=alpha_beta.append(alpha_beta2)
+
+        #compute top_minus_index_spread
+        top_minus_index_spread=perf.compute_top_minus_index_spread(mean_quant_rateret_bydate,\
+                                                                    market_index)
+
+    #shape (dates,periods) max gets the max number of quantile, not the quantile having max return value
     mean_ret_spread_quant, std_spread_quant = perf.compute_mean_returns_spread(
         mean_quant_rateret_bydate,
         factor_data["factor_quantile"].max(),
@@ -256,21 +272,29 @@ def create_returns_tear_sheet(
         alpha_beta, mean_quant_rateret, mean_ret_spread_quant
     )
 
+    print('All Time Technique Index')
+
     technique_index=perf.compute_technique_index(
         factor_returns,
         mean_quant_ret_bydate,
         mean_ret_spread_quant,
+        top_minus_index=top_minus_index_spread,
         year_wise=False
     )
     utils.print_table(technique_index)
 
-    year_technique_index=perf.compute_technique_index(
+    print('Year Wise Technique Index')
+
+    year_technique_index1,year_technique_index2=perf.compute_technique_index(
         factor_returns,
         mean_quant_ret_bydate,
         mean_ret_spread_quant,
+        top_minus_index=top_minus_index_spread,
         year_wise=True
     )
-    utils.print_table(year_technique_index)
+    
+    utils.print_table(year_technique_index2)
+    utils.print_table(year_technique_index1)
 
     plotting.plot_quantile_returns_bar(
         mean_quant_rateret,
@@ -291,20 +315,19 @@ def create_returns_tear_sheet(
             UserWarning,
         )
 
-    title='Top Minus Bottom Quantile Cumulative Return (1D Period)'
-    plotting.plot_cumulative_returns(
-        mean_ret_spread_quant['1D'],period="1D", title=title, ax=gf.next_row()
-    )
     # Compute cumulative returns from daily simple returns, if '1D'
     # returns are provided.
     if "1D" in factor_returns:
-        title = (
-            "Factor Weighted "
-            + ("Group Neutral " if group_neutral else "")
-            + ("Long/Short " if long_short else "")
-            + "Portfolio Cumulative Return (1D Period)"
+        title='Top Minus Bottom Quantile Cumulative Return (1D Period)'
+        plotting.plot_cumulative_returns(
+            mean_ret_spread_quant['1D'],period="1D", title=title, ax=gf.next_row()
         )
-
+        title = (
+                    "Factor Weighted "
+                    + ("Group Neutral " if group_neutral else "")
+                    + ("Long/Short " if long_short else "")
+                    + "Portfolio Cumulative Return (1D Period)"
+                )
         plotting.plot_cumulative_returns(
             factor_returns["1D"], period="1D", title=title, ax=gf.next_row()
         )
@@ -312,6 +335,12 @@ def create_returns_tear_sheet(
         plotting.plot_cumulative_returns_by_quantile(
             mean_quant_ret_bydate["1D"], period="1D", ax=gf.next_row()
         )
+
+        if market_index is not None:
+            plotting.plot_cumulative_returns_by_top_mkt(
+                mean_quant_ret_bydate['1D'], top_minus_index_spread['1D'], market_index['1D'],
+                ax=gf.next_row()
+            )
 
     ax_mean_quantile_returns_spread_ts = [
         gf.next_row() for x in range(fr_cols)
@@ -511,7 +540,8 @@ def create_turnover_tear_sheet(factor_data, turnover_periods=None):
 def create_full_tear_sheet(factor_data,
                            long_short=True,
                            group_neutral=False,
-                           by_group=False):
+                           by_group=False,
+                           market_index=None):
     """
     Creates a full tear sheet for analysis and evaluating single
     return predicting (alpha) factor.
@@ -539,11 +569,11 @@ def create_full_tear_sheet(factor_data,
     """
 
     plotting.plot_quantile_statistics_table(factor_data)
-    create_information_tear_sheet(
-        factor_data, group_neutral, by_group, set_context=False
-    )
+    #create_information_tear_sheet(
+    #    factor_data, group_neutral, by_group, set_context=False
+    #)
     create_returns_tear_sheet(
-        factor_data, long_short, group_neutral, by_group, set_context=False
+        factor_data, long_short, group_neutral, by_group, set_context=False,market_index=market_index
     )
     create_turnover_tear_sheet(factor_data, set_context=False)
 

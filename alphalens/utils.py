@@ -345,6 +345,117 @@ def compute_forward_returns(factor,
 
     return df
 
+def compute_market_index_forward_returns(factor,
+                            prices,
+                            periods=(1, 5, 10),
+                            filter_zscore=None,
+                            cumulative_returns=True):
+    """
+    Finds the N period forward returns (as percent change) for market index if provided
+
+    Parameters
+    ----------
+    factor : pd.Series - MultiIndex
+        A MultiIndex Series indexed by timestamp (level 0) and asset
+        (level 1), containing the values for a single alpha factor.
+
+        - See full explanation in utils.get_clean_factor_and_forward_returns
+
+    prices : pd.DataFrame
+        Pricing data to use in forward price calculation.
+        market index closeprice as columns, dates as index. Pricing data must
+        span the factor analysis time period plus an additional buffer window
+        that is greater than the maximum number of expected periods
+        in the forward returns calculations.
+    periods : sequence[int]
+        periods to compute forward returns on.
+    filter_zscore : int or float, optional
+        Sets forward returns greater than X standard deviations
+        from the the mean to nan. Set it to 'None' to avoid filtering.
+        Caution: this outlier filtering incorporates lookahead bias.
+    cumulative_returns : bool, optional
+        If True, forward returns columns will contain cumulative returns.
+        Setting this to False is useful if you want to analyze how predictive
+        a factor is for a single forward day.
+
+    Returns
+    -------
+    forward_returns : pd.DataFrame - single index
+        A SingleIndex DataFrame indexed by timestamp
+        Forward returns column names follow the format accepted by
+        pd.Timedelta (e.g. '1D', '30m', '3h15m', '1D1h', etc).
+        'date' index freq property (forward_returns.index.freq)
+        will be set to a trading calendar (pandas DateOffset) inferred
+        from the input data (see infer_trading_calendar for more details).
+    """
+
+    factor_dateindex = factor.index.levels[0]
+    if factor_dateindex.tz != prices.index.tz:
+        raise NonMatchingTimezoneError("The timezone of 'factor' is not the "
+                                       "same as the timezone of 'prices'. See "
+                                       "the pandas methods tz_localize and "
+                                       "tz_convert.")
+    freq = infer_trading_calendar(factor_dateindex, prices.index)
+
+    factor_dateindex = factor_dateindex.intersection(prices.index)
+
+    if len(factor_dateindex) == 0:
+        raise ValueError("Factor and prices indices don't match: make sure "
+                         "they have the same convention in terms of datetimes "
+                         "and symbol-names")
+
+    raw_values_dict = {}
+    column_list = []
+
+    for period in sorted(periods):
+        if cumulative_returns:
+            returns = prices.pct_change(period)
+        else:
+            returns = prices.pct_change()
+
+        forward_returns = \
+            returns.shift(-period).reindex(factor_dateindex)
+
+        if filter_zscore is not None:
+            mask = abs(
+                forward_returns - forward_returns.mean()
+            ) > (filter_zscore * forward_returns.std())
+            forward_returns[mask] = np.nan
+
+        #
+        # Find the period length, which will be the column name. We'll test
+        # several entries in order to find out the most likely period length
+        # (in case the user passed inconsinstent data)
+        #?
+        days_diffs = []
+        for i in range(30):
+            if i >= len(forward_returns.index):
+                break
+            p_idx = prices.index.get_loc(forward_returns.index[i])
+            if p_idx is None or p_idx < 0 or (
+                    p_idx + period) >= len(prices.index):
+                continue
+            start = prices.index[p_idx]
+            end = prices.index[p_idx + period]
+            period_len = diff_custom_calendar_timedeltas(start, end, freq)
+            days_diffs.append(period_len.components.days)
+
+        delta_days = period_len.components.days - mode(days_diffs).mode[0]
+        period_len -= pd.Timedelta(days=delta_days)
+        label = timedelta_to_string(period_len)
+
+        column_list.append(label)
+
+        raw_values_dict[label] = np.concatenate(forward_returns.values)
+
+    df = pd.DataFrame.from_dict(raw_values_dict)
+    df.index=prices.index
+
+    # now set the columns correctly
+    df = df[column_list]
+    df.index.set_names('date',inplace=True)
+    df.index.freq = freq
+    return df.dropna()
 
 def backshift_returns_series(series, N):
     """Shift a multi-indexed series backwards by N observations in

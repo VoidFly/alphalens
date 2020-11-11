@@ -259,7 +259,8 @@ def factor_alpha_beta(factor_data,
                       returns=None,
                       demeaned=True,
                       group_adjust=False,
-                      equal_weight=False):
+                      equal_weight=False,
+                      market_index=None):
     """
     Compute the alpha (excess returns), alpha t-stat (alpha significance),
     and beta (market exposure) of a factor. A regression is run with
@@ -288,7 +289,8 @@ def factor_alpha_beta(factor_data,
     equal_weight : bool, optional
         Control how to build factor returns used for alpha/beta computation
         -- see performance.factor_return for a full explanation
-
+    market_index: pd.DataFrame - Index
+        A DataFrame indexed by date. Periods used as columns.
     Returns
     -------
     alpha_beta : pd.Series
@@ -300,9 +302,13 @@ def factor_alpha_beta(factor_data,
         returns = \
             factor_returns(factor_data, demeaned, group_adjust, equal_weight)
 
-    universe_ret = factor_data.groupby(level='date')[
-        utils.get_forward_returns_columns(factor_data.columns)] \
-        .mean().loc[returns.index]
+    if market_index is None:
+        universe_ret = factor_data.groupby(level='date')[
+            utils.get_forward_returns_columns(factor_data.columns)] \
+            .mean().loc[returns.index]
+    else:
+        universe_ret=market_index[utils.get_forward_returns_columns(
+            market_index.columns)].loc[returns.index]
 
     if isinstance(returns, pd.Series):
         returns.name = universe_ret.columns.values[0]
@@ -326,6 +332,8 @@ def factor_alpha_beta(factor_data,
             alpha_beta.loc['Ann. alpha', period] = \
                 (1 + alpha) ** freq_adjust - 1
             alpha_beta.loc['beta', period] = beta
+    if market_index is not None:
+        alpha_beta=alpha_beta.rename(index={'Ann. alpha':'Ann. alpha (Market index based)','beta':'beta (Market index based)'})
 
     return alpha_beta
 
@@ -520,20 +528,33 @@ def compute_technique_index(
                             factor_returns,
                             mean_quant_ret_bydate,
                             mean_ret_spread_quant,
+                            top_minus_index=None,
                             year_wise=False):
     """
     compute techique indexes (on 1 day return period)
     """
     quantile_wise_return=mean_quant_ret_bydate['1D'].unstack().T
-    cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns={'1D':'Factor_Weighted Return'}).join(mean_ret_spread_quant['1D']).rename(columns={'1D':'Top_minus_Bottom Return'})
-                                    
-                                    
+
+    if top_minus_index is not None:
+        cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns= {'1D':'Factor_Weighted Return'}
+                                ).join(mean_ret_spread_quant['1D']).rename(columns={'1D':'Top_minus_Bottom Return'}
+                                ).join(top_minus_index['1D']).rename(columns={'1D':'Top_minus_index Return'})
+    else:
+        cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns= {'1D':'Factor_Weighted Return'}
+                                ).join(mean_ret_spread_quant['1D']).rename(columns={'1D':'Top_minus_Bottom Return'})
+                                
+                                                                    
     if year_wise:
-        return cmb.resample('Y').apply([ep.annual_return,
+        t=cmb.resample('Y').apply([ep.annual_return,
                                     ep.max_drawdown,
                                     ep.sharpe_ratio,
                                     ep.sortino_ratio,
-                                    ep.calmar_ratio]).stack(level=0)   
+                                    ep.calmar_ratio])
+        if top_minus_index is not None:
+            tmp=['Factor_Weighted Return','Top_minus_Bottom Return','Top_minus_index Return']
+        else:
+            tmp=['Factor_Weighted Return','Top_minus_Bottom Return']
+        return t[tmp].stack(level=0), t.drop(columns=tmp).stack(level=0)
     else:
         return cmb.apply([ep.annual_return,
                             ep.max_drawdown,
@@ -589,6 +610,28 @@ def compute_mean_returns_spread(mean_returns,
 
     return mean_return_difference, joint_std_err
 
+def compute_top_minus_index_spread(mean_returns,
+                                market_index):
+    """
+    Computes the difference between the mean returns of
+    two quantiles. Optionally, computes the standard error
+    of this difference.
+    Parameters
+    ----------
+    mean_returns : pd.DataFrame
+        DataFrame of mean period wise returns by quantile.
+        MultiIndex containing date and quantile.
+        See mean_return_by_quantile.
+    market_index: pd.DataFrame
+    Returns
+    -------
+    mean_return_difference : pd.Series
+
+    """
+    mean_return_difference = mean_returns.xs(mean_returns.index.levels[0].max(),
+                                             level='factor_quantile')-market_index
+
+    return mean_return_difference
 
 def quantile_turnover(quantile_factor, quantile, period=1):
     """
