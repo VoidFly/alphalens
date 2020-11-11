@@ -1,6 +1,7 @@
 #%%
-%reload_ext autoreload
-%autoreload 2
+# For debugging
+# %reload_ext autoreload
+# %autoreload 2
 import sys
 sys.path.append("..")
 import alphalens
@@ -19,14 +20,17 @@ pricing=pd.read_csv('./data/pricing.csv',index_col=['date'],parse_dates=True)
 #pricing['date']=pd.to_datetime(pricing['date'])
 #pricing=pricing.set_index('date')
 
-phrase='''
+market_index_name='000300'
+
+sql='''
 select a.TradingDay, a.ClosePrice from jydb.dbo.QT_IndexQuote a
 left join jydb.dbo.SecuMain b
 on a.InnerCode = b.InnerCode
 where b.SecuCode = '000300' and a.TradingDay >= '{}' and a.TradingDay <= '{}'
 order by a.TradingDay
 '''.format(pricing.index.min(),pricing.index.max())
-market_data=pd.read_sql(phrase,conn)
+
+market_data=pd.read_sql(sql,conn)
 conn.close()
 market_data=market_data.set_index('TradingDay')
 market_data.index.name='date'
@@ -41,5 +45,5 @@ factor_data = alphalens.utils.get_clean_factor_and_forward_returns(my_factor,
 market_data1=alphalens.utils.compute_market_index_forward_returns(my_factor,market_data)
 #%%
 # Run analysis
-alphalens.tears.create_full_tear_sheet(factor_data,market_index=market_data1)
+alphalens.tears.create_full_tear_sheet(factor_data,index_name=market_index_name,market_index=market_data1)
 # %%

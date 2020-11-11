@@ -254,13 +254,21 @@ def factor_returns(factor_data,
 
     return returns
 
+def compute_market_index(factor_data,returns):
+
+    universe_ret = factor_data.groupby(level='date')[
+        utils.get_forward_returns_columns(factor_data.columns)] \
+        .mean().loc[returns.index]
+    return universe_ret
 
 def factor_alpha_beta(factor_data,
+                      market_index=None,
+                      index_name='market_mean',
                       returns=None,
                       demeaned=True,
                       group_adjust=False,
                       equal_weight=False,
-                      market_index=None):
+                      ):
     """
     Compute the alpha (excess returns), alpha t-stat (alpha significance),
     and beta (market exposure) of a factor. A regression is run with
@@ -302,13 +310,13 @@ def factor_alpha_beta(factor_data,
         returns = \
             factor_returns(factor_data, demeaned, group_adjust, equal_weight)
 
-    if market_index is None:
+    if index_name == 'market_mean':
         universe_ret = factor_data.groupby(level='date')[
-            utils.get_forward_returns_columns(factor_data.columns)] \
-            .mean().loc[returns.index]
+        utils.get_forward_returns_columns(factor_data.columns)] \
+        .mean().loc[returns.index]
     else:
-        universe_ret=market_index[utils.get_forward_returns_columns(
-            market_index.columns)].loc[returns.index]
+        universe_ret=market_index[utils.get_forward_returns_columns(market_index.columns)] \
+        .loc[returns.index]
 
     if isinstance(returns, pd.Series):
         returns.name = universe_ret.columns.values[0]
@@ -332,8 +340,9 @@ def factor_alpha_beta(factor_data,
             alpha_beta.loc['Ann. alpha', period] = \
                 (1 + alpha) ** freq_adjust - 1
             alpha_beta.loc['beta', period] = beta
-    if market_index is not None:
-        alpha_beta=alpha_beta.rename(index={'Ann. alpha':'Ann. alpha (Market index based)','beta':'beta (Market index based)'})
+    if index_name != 'market_mean':
+        alpha_beta=alpha_beta.rename(index={'Ann. alpha':'Ann. alpha ({} based)'.format(index_name),
+        'beta':'beta ({} based)'.format(index_name)})
 
     return alpha_beta
 
@@ -529,19 +538,17 @@ def compute_technique_index(
                             mean_quant_ret_bydate,
                             mean_ret_spread_quant,
                             top_minus_index=None,
+                            index_name='market_mean',
                             year_wise=False):
     """
     compute techique indexes (on 1 day return period)
     """
     quantile_wise_return=mean_quant_ret_bydate['1D'].unstack().T
 
-    if top_minus_index is not None:
-        cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns= {'1D':'Factor_Weighted Return'}
-                                ).join(mean_ret_spread_quant['1D']).rename(columns={'1D':'Top_minus_Bottom Return'}
-                                ).join(top_minus_index['1D']).rename(columns={'1D':'Top_minus_index Return'})
-    else:
-        cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns= {'1D':'Factor_Weighted Return'}
-                                ).join(mean_ret_spread_quant['1D']).rename(columns={'1D':'Top_minus_Bottom Return'})
+    cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns= {'1D':'Factor_Weighted Return'}
+                            ).join(mean_ret_spread_quant['1D']).rename(columns={'1D':'Top_minus_Bottom Return'}
+                            ).join(top_minus_index['1D']).rename(columns={'1D':'Top_minus_Index Return'})
+
                                 
                                                                     
     if year_wise:
@@ -550,10 +557,9 @@ def compute_technique_index(
                                     ep.sharpe_ratio,
                                     ep.sortino_ratio,
                                     ep.calmar_ratio])
-        if top_minus_index is not None:
-            tmp=['Factor_Weighted Return','Top_minus_Bottom Return','Top_minus_index Return']
-        else:
-            tmp=['Factor_Weighted Return','Top_minus_Bottom Return']
+
+        tmp=['Factor_Weighted Return','Top_minus_Bottom Return','Top_minus_Index Return']
+
         return t[tmp].stack(level=0), t.drop(columns=tmp).stack(level=0)
     else:
         return cmb.apply([ep.annual_return,
