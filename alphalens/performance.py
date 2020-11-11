@@ -535,9 +535,14 @@ def compute_technique_index(
     """
     quantile_wise_return=mean_quant_ret_bydate['1D'].unstack().T
 
-    cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns= {'1D':'Factor_Weighted Return'}
-                            ).join(mean_ret_spread_quant['1D']).rename(columns={'1D':'Top_minus_Bottom Return'}
-                            ).join(top_minus_index['1D']).rename(columns={'1D':'Top_minus_index Return'})
+    if top_minus_index is not None:
+        cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns= {'1D':'Factor_Weighted Return'}
+                                ).join(mean_ret_spread_quant['1D']).rename(columns={'1D':'Top_minus_Bottom Return'}
+                                ).join(top_minus_index['1D']).rename(columns={'1D':'Top_minus_index Return'})
+    else:
+        cmb=quantile_wise_return.join(factor_returns['1D']).rename(columns= {'1D':'Factor_Weighted Return'}
+                                ).join(mean_ret_spread_quant['1D']).rename(columns={'1D':'Top_minus_Bottom Return'})
+                                
                                                                     
     if year_wise:
         t=cmb.resample('Y').apply([ep.annual_return,
@@ -545,9 +550,11 @@ def compute_technique_index(
                                     ep.sharpe_ratio,
                                     ep.sortino_ratio,
                                     ep.calmar_ratio])
-        tmp=['Factor_Weighted Return','Top_minus_Bottom Return','Top_minus_index Return']
+        if top_minus_index is not None:
+            tmp=['Factor_Weighted Return','Top_minus_Bottom Return','Top_minus_index Return']
+        else:
+            tmp=['Factor_Weighted Return','Top_minus_Bottom Return']
         return t[tmp].stack(level=0), t.drop(columns=tmp).stack(level=0)
-        
     else:
         return cmb.apply([ep.annual_return,
                             ep.max_drawdown,
