@@ -817,6 +817,7 @@ def plot_cumulative_returns_by_top_mkt(mean_quant_ret_bydate,
                                         market_index,
                                         period='1D',
                                         freq=None,
+                                        index_name='market_mean',
                                         ax=None):
     """
     Plots the cumulative returns of Top Quantile, Market Index (if you have), Top
@@ -840,7 +841,7 @@ def plot_cumulative_returns_by_top_mkt(mean_quant_ret_bydate,
     max_quantile=mean_quant_ret_bydate.index.levels[0].max()
     max_quantile_ret=mean_quant_ret_bydate.xs(max_quantile,level='factor_quantile')
     ret_wide=pd.DataFrame({str(max_quantile):max_quantile_ret,
-                            'index':market_index,
+                            'index ({})'.format(index_name):market_index,
                             'Top_minus_index':top_minus_index_spread
                             })
 
