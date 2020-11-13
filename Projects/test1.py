@@ -9,13 +9,17 @@ import pandas as pd
 import pymssql
 conn = pymssql.connect(host='192.168.0.144', user='readonly', password='readonly', database='jydb')
 
+factor_path='./data/my_factor.csv'
+pricing_path='./data/pricing.csv'
+
+
 #对于my_factor, 需要先指定dtype={'asset':str}, 并且不能设置index_col,之后再set_index(否则asset会读成int)
-my_factor=pd.read_csv('./data/my_factor.csv',dtype={'asset':str})
+my_factor=pd.read_csv(factor_path,dtype={'asset':str})
 my_factor['date']=pd.to_datetime(my_factor['date'])
 #set multiIndex [date,asset]
 my_factor=my_factor.set_index(['date','asset'])
 
-pricing=pd.read_csv('./data/pricing.csv',index_col=['date'],parse_dates=True)
+pricing=pd.read_csv(pricing_path,index_col=['date'],parse_dates=True)
 #or equivlent:
 #pricing['date']=pd.to_datetime(pricing['date'])
 #pricing=pricing.set_index('date')
