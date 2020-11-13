@@ -9,8 +9,8 @@ import pandas as pd
 import pymssql
 conn = pymssql.connect(host='192.168.0.144', user='readonly', password='readonly', database='jydb')
 
-factor_path='./data/up_north_capital/HoldPER.csv'
-pricing_path='./data/up_north_capital/Pricing.csv'
+factor_path=r'C:\Projects\up_north_capital\data\hs300MHoldPER.csv'
+pricing_path=r'C:\Projects\up_north_capital\data\Pricing.csv'
 
 #对于my_factor, 需要先指定dtype={'asset':str}, 并且不能设置index_col,之后再set_index(否则asset会读成int)
 my_factor=pd.read_csv(factor_path,dtype={'asset':str})
@@ -45,7 +45,6 @@ factor_data = alphalens.utils.get_clean_factor_and_forward_returns(my_factor,
                                                                    groupby_labels=None
                                                                    )
 market_data1=alphalens.utils.compute_market_index_forward_returns(my_factor,market_data)
-#%%
 # Run analysis
 alphalens.tears.create_full_tear_sheet(factor_data,index_name=market_index_name,market_index=market_data1)
 # %%
