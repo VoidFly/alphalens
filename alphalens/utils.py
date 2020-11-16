@@ -185,7 +185,8 @@ def infer_trading_calendar(factor_idx, prices_idx):
     -------
     calendar : pd.DateOffset
     """
-    full_idx = factor_idx.union(prices_idx)
+    full_idx=factor_idx
+    #full_idx = factor_idx.union(prices_idx)
 
     traded_weekdays = []
     holidays = []
@@ -335,7 +336,6 @@ def compute_forward_returns(factor,
     )
     df = df.reindex(factor.index)
 
-    #?
     # now set the columns correctly
     df = df[column_list]
     #df.index.levels[0].freq = freq
@@ -351,42 +351,7 @@ def compute_market_index_forward_returns(factor,
                             filter_zscore=None,
                             cumulative_returns=True):
     """
-    Finds the N period forward returns (as percent change) for market index if provided
-
-    Parameters
-    ----------
-    factor : pd.Series - MultiIndex
-        A MultiIndex Series indexed by timestamp (level 0) and asset
-        (level 1), containing the values for a single alpha factor.
-
-        - See full explanation in utils.get_clean_factor_and_forward_returns
-
-    prices : pd.DataFrame
-        Pricing data to use in forward price calculation.
-        market index closeprice as columns, dates as index. Pricing data must
-        span the factor analysis time period plus an additional buffer window
-        that is greater than the maximum number of expected periods
-        in the forward returns calculations.
-    periods : sequence[int]
-        periods to compute forward returns on.
-    filter_zscore : int or float, optional
-        Sets forward returns greater than X standard deviations
-        from the the mean to nan. Set it to 'None' to avoid filtering.
-        Caution: this outlier filtering incorporates lookahead bias.
-    cumulative_returns : bool, optional
-        If True, forward returns columns will contain cumulative returns.
-        Setting this to False is useful if you want to analyze how predictive
-        a factor is for a single forward day.
-
-    Returns
-    -------
-    forward_returns : pd.DataFrame - single index
-        A SingleIndex DataFrame indexed by timestamp
-        Forward returns column names follow the format accepted by
-        pd.Timedelta (e.g. '1D', '30m', '3h15m', '1D1h', etc).
-        'date' index freq property (forward_returns.index.freq)
-        will be set to a trading calendar (pandas DateOffset) inferred
-        from the input data (see infer_trading_calendar for more details).
+    prices is the market index prices.
     """
 
     factor_dateindex = factor.index.levels[0]
@@ -449,13 +414,14 @@ def compute_market_index_forward_returns(factor,
         raw_values_dict[label] = np.concatenate(forward_returns.values)
 
     df = pd.DataFrame.from_dict(raw_values_dict)
-    df.index=prices.index
+
+    df.index=factor_dateindex
 
     # now set the columns correctly
     df = df[column_list]
     df.index.set_names('date',inplace=True)
     df.index.freq = freq
-    return df.dropna()
+    return df
 
 def backshift_returns_series(series, N):
     """Shift a multi-indexed series backwards by N observations in
@@ -945,7 +911,7 @@ def get_clean_factor_and_forward_returns(factor,
         filter_zscore,
         cumulative_returns,
     )
-
+    #以forward_returns 作base，mereg factor ,然后dropna
     factor_data = get_clean_factor(factor, forward_returns, groupby=groupby,
                                    groupby_labels=groupby_labels,
                                    quantiles=quantiles, bins=bins,

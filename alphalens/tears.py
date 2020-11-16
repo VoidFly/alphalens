@@ -251,7 +251,7 @@ def create_returns_tear_sheet(
     if index_name!='market_mean':
         # compute alpha beta using user specified market index, eg. hs300, as universal return
         alpha_beta2 = perf.factor_alpha_beta(
-            factor_data, market_index=market_index,index_name=index_name,demeaned=long_short, group_adjust=group_neutral
+            factor_data, market_index=market_index,returns=factor_returns,index_name=index_name,demeaned=long_short, group_adjust=group_neutral
         )
         alpha_beta=alpha_beta.append(alpha_beta2)
 

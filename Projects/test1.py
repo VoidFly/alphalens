@@ -1,7 +1,7 @@
 #%%
 # For debugging
-# %reload_ext autoreload
-# %autoreload 2
+%reload_ext autoreload
+%autoreload 2
 import sys
 sys.path.append("..")
 import alphalens
@@ -14,7 +14,7 @@ pricing_path='./data/pricing.csv'
 
 
 #对于my_factor, 需要先指定dtype={'asset':str}, 并且不能设置index_col,之后再set_index(否则asset会读成int)
-my_factor=pd.read_csv(factor_path,dtype={'asset':str})
+my_factor=pd.read_csv(factor_path,dtype={'asset':str},sep=r'\s*,\s*')
 my_factor['date']=pd.to_datetime(my_factor['date'])
 #set multiIndex [date,asset]
 my_factor=my_factor.set_index(['date','asset'])
@@ -38,6 +38,9 @@ market_data=pd.read_sql(sql,conn)
 conn.close()
 market_data=market_data.set_index('TradingDay')
 market_data.index.name='date'
+market_data=market_data.shift(-1)
+
+
 #%%
 # Ingest and format data
 factor_data = alphalens.utils.get_clean_factor_and_forward_returns(my_factor,
