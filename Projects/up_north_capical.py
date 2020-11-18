@@ -9,7 +9,7 @@ import pandas as pd
 import pymssql
 conn = pymssql.connect(host='192.168.0.144', user='readonly', password='readonly', database='jydb')
 
-factor_path=r'C:\Projects\up_north_capital\data\HoldPER.csv'
+factor_path=r'C:\Projects\up_north_capital\data\HoldPER_N.csv'
 pricing_path=r'C:\Projects\up_north_capital\data\Pricing.csv'
 
 #对于my_factor, 需要先指定dtype={'asset':str}, 并且不能设置index_col,之后再set_index(否则asset会读成int)
