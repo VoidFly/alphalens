@@ -46,11 +46,13 @@ market_data=market_data.shift(-1)
 factor_data = alphalens.utils.get_clean_factor_and_forward_returns(my_factor,
                                                                    pricing,
                                                                    quantiles=5,
+                                                                   periods=[1,2,5,10],
                                                                    groupby=None,
                                                                    groupby_labels=None
                                                                    )
-market_data1=alphalens.utils.compute_market_index_forward_returns(my_factor,market_data)
+market_data1=alphalens.utils.compute_market_index_forward_returns(my_factor,market_data,periods=[1,2,5,10])
 #%%
 # Run analysis
-alphalens.tears.create_full_tear_sheet(factor_data,index_name=market_index_name,market_index=market_data1)
+alphalens.tears.create_full_tear_sheet(factor_data,index_name=market_index_name,market_index=market_data1,group_neutral=False,long_short=False)
+#alphalens.tears.create_information_tear_sheet(factor_data)
 # %%

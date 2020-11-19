@@ -334,6 +334,10 @@ def compute_forward_returns(factor,
         ),
         inplace=True
     )
+    #only those stocks with real factor values are remained in the forward return df
+    #note that there could still be some NaN in forward_return columns.
+    # eg. the tail days not enough for computing forward returns. These will be dropped in 
+    # get_clean_factor 
     df = df.reindex(factor.index)
 
     # now set the columns correctly
@@ -414,9 +418,8 @@ def compute_market_index_forward_returns(factor,
         raw_values_dict[label] = np.concatenate(forward_returns.values)
 
     df = pd.DataFrame.from_dict(raw_values_dict)
-
-    df.index=factor_dateindex
-
+    df=df.set_index(factor_dateindex)
+    
     # now set the columns correctly
     df = df[column_list]
     df.index.set_names('date',inplace=True)

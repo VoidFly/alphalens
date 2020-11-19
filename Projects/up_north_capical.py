@@ -9,8 +9,8 @@ import pandas as pd
 import pymssql
 conn = pymssql.connect(host='192.168.0.144', user='readonly', password='readonly', database='jydb')
 
-factor_path=r'C:\Projects\up_north_capital\data\diff1HoldPER_N.csv'
-pricing_path=r'C:\Projects\up_north_capital\data\diff1Pricing.csv'
+factor_path=r'C:\Projects\up_north_capital\data\HoldPER_N.csv'
+pricing_path=r'C:\Projects\up_north_capital\data\Pricing.csv'
 
 #对于my_factor, 需要先指定dtype={'asset':str}, 并且不能设置index_col,之后再set_index(否则asset会读成int)
 my_factor=pd.read_csv(factor_path,dtype={'asset':str})
@@ -44,16 +44,16 @@ market_data=market_data.shift(-1)
 # Ingest and format data
 factor_data = alphalens.utils.get_clean_factor_and_forward_returns(my_factor,
                                                                    pricing,
-                                                                   periods=[1,5],
-                                                                   quantiles=5,
+                                                                   periods=[1],
+                                                                   quantiles=10,
                                                                    groupby=None,
                                                                    groupby_labels=None
                                                                    )
-market_data1=alphalens.utils.compute_market_index_forward_returns(my_factor,market_data)
+#market_data1=alphalens.utils.compute_market_index_forward_returns(my_factor,market_data,periods=[1,5])
 # Run analysis
-#alphalens.tears.create_full_tear_sheet(factor_data,index_name=market_index_name,market_index=market_data1,long_short=False)
+alphalens.tears.create_full_tear_sheet(factor_data,long_short=False)
 
-alphalens.tears.create_information_tear_sheet(factor_data)
+#alphalens.tears.create_information_tear_sheet(factor_data)
 # %%
 
 # %%
