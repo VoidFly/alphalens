@@ -41,9 +41,11 @@ def customize(func):
         if set_context:
             color_palette = sns.color_palette('colorblind')
             with plotting_context(), axes_style(), color_palette:
+                #sns.set(font="simhei")
                 sns.despine(left=True)
                 return func(*args, **kwargs)
         else:
+            #sns.set(font="simhei")
             return func(*args, **kwargs)
     return call_w_context
 
@@ -363,6 +365,8 @@ def plot_quantile_returns_bar(mean_ret_by_q,
     ax : matplotlib.Axes
         The axes that were plotted on.
     """
+    plt.rcParams['axes.unicode_minus'] = False
+    sns.set(font="simhei",font_scale=1.5)
 
     mean_ret_by_q = mean_ret_by_q.copy()
 
@@ -574,6 +578,11 @@ def plot_ic_by_group(ic_group, ax=None):
     ax : matplotlib.Axes
         The axes that were plotted on.
     """
+
+    plt.rcParams['axes.unicode_minus'] = False
+    plt.rcParams['font.sans-serif']=['SimHei']
+    sns.set(font="simhei",font_scale=1.5)
+    
     if ax is None:
         f, ax = plt.subplots(1, 1, figsize=(18, 6))
     ic_group.plot(kind='bar', ax=ax)

@@ -454,7 +454,8 @@ def create_information_tear_sheet(
             factor_data, group_adjust=group_neutral, by_group=True
         )
 
-        plotting.plot_ic_by_group(mean_group_ic, ax=gf.next_row())
+        #plotting.plot_ic_by_group(mean_group_ic, ax=gf.next_row())
+        plotting.plot_ic_by_group(mean_group_ic)#分组绘图时，为显示中文，新建一个ax
 
     plt.show()
     gf.close()

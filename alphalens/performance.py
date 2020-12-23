@@ -469,9 +469,10 @@ def positions(weights, period, freq=None):
 
 def mean_return_by_quantile(factor_data,
                             by_date=False,
-                            by_group=False,
+                            by_group=False,#是否分group计算收益
                             demeaned=True,
-                            group_adjust=False):
+                            group_adjust=False#是否对每个group内的收益demean 此参数和by_group相互独立
+                            ):
     """
     Computes mean returns for factor quantiles across
     provided forward returns columns.
