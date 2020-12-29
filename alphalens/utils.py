@@ -349,7 +349,7 @@ def compute_forward_returns(factor,
 
     return df
 
-def compute_market_index_forward_returns(factor,
+def compute_market_index_forward_returns(factor_dateindex,
                             prices,
                             periods=(1, 5, 10),
                             filter_zscore=None,
@@ -357,16 +357,12 @@ def compute_market_index_forward_returns(factor,
     """
     prices is the market index prices.
     """
-
-    factor_dateindex = factor.index.levels[0]
     if factor_dateindex.tz != prices.index.tz:
         raise NonMatchingTimezoneError("The timezone of 'factor' is not the "
                                        "same as the timezone of 'prices'. See "
                                        "the pandas methods tz_localize and "
                                        "tz_convert.")
-    freq = infer_trading_calendar(factor_dateindex, prices.index)
-
-    factor_dateindex = factor_dateindex.intersection(prices.index)
+    freq = factor_dateindex.freq
 
     if len(factor_dateindex) == 0:
         raise ValueError("Factor and prices indices don't match: make sure "
@@ -488,6 +484,7 @@ def demean_forward_returns(factor_data, grouper=None):
     """
 
     factor_data = factor_data.copy()
+    factor_data.to_csv('C:/Projects/factor_data.csv')
 
     if not grouper:
         grouper = factor_data.index.get_level_values('date')
@@ -742,6 +739,8 @@ def get_clean_factor(factor,
         raise MaxLossExceededError(message)
     else:
         print("max_loss is %.1f%%, not exceeded: OK!" % (max_loss * 100))
+
+    merged_data.index=merged_data.index.remove_unused_levels()
 
     return merged_data
 

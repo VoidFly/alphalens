@@ -203,7 +203,7 @@ def create_returns_tear_sheet(
     by_group : bool
         If True, display graphs separately for each group.
     """
-    #get factor_weighted forward returns (date,periods)
+    #get factor_weighted forward returns (date,periods) 用factor对全部股票加权的组合收益
     factor_returns = perf.factor_returns(
         factor_data, long_short, group_neutral
     )
@@ -257,7 +257,7 @@ def create_returns_tear_sheet(
 
     top_minus_index_spread=perf.compute_top_minus_index_spread(mean_quant_rateret_bydate,\
                                                                     market_index)
-
+                                
     #shape (dates,periods) max gets the max number of quantile, not the quantile having max return value
     mean_ret_spread_quant, std_spread_quant = perf.compute_mean_returns_spread(
         mean_quant_rateret_bydate,
@@ -341,10 +341,14 @@ def create_returns_tear_sheet(
         )
 
         plotting.plot_cumulative_returns_by_top_mkt(
-            mean_quant_ret_bydate['1D'], top_minus_index_spread['1D'],
+            mean_quant_rateret_bydate['1D'], top_minus_index_spread['1D'],
             market_index['1D'],index_name=index_name,
             ax=gf.next_row()
         )
+        #print(market_index['1D'])
+        #print(top_minus_index_spread['1D'])
+        #print(mean_quant_rateret_bydate.xs(5,level='factor_quantile'))
+        #assert((market_index['1D']+top_minus_index_spread['1D'])==mean_quant_ret_bydate.xs(5,level='factor_quantile'))
 
     ax_mean_quantile_returns_spread_ts = [
         gf.next_row() for x in range(fr_cols)

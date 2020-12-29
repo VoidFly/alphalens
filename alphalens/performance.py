@@ -127,8 +127,8 @@ def mean_information_coefficient(factor_data,
 
 
 def factor_weights(factor_data,
-                   demeaned=True,
-                   group_adjust=False,
+                   demeaned=True,#long_short
+                   group_adjust=False,#group_neutral
                    equal_weight=False):
     """
     Computes asset weights by factor values and dividing by the sum of their
@@ -637,7 +637,10 @@ def compute_top_minus_index_spread(mean_returns,
     """
     mean_return_difference = mean_returns.xs(mean_returns.index.levels[0].max(),
                                              level='factor_quantile')-market_index
-
+    
+    # tmp=pd.merge(mean_returns.xs(mean_returns.index.levels[0].max(),level='factor_quantile'),
+    #             )
+    
     return mean_return_difference
 
 def quantile_turnover(quantile_factor, quantile, period=1):
