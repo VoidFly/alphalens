@@ -226,6 +226,8 @@ def plot_ic_ts(ic, ax=None):
             lw=2,
             alpha=0.8
         )
+        #在这里加入ic 的cumsum
+
 
         a.set(ylabel='IC', xlabel="")
         a.set_title(

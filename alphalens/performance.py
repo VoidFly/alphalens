@@ -640,7 +640,7 @@ def compute_top_minus_index_spread(mean_returns,
     
     # tmp=pd.merge(mean_returns.xs(mean_returns.index.levels[0].max(),level='factor_quantile'),
     #             )
-    
+
     return mean_return_difference
 
 def quantile_turnover(quantile_factor, quantile, period=1):
