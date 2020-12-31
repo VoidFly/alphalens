@@ -834,9 +834,10 @@ def plot_cumulative_returns_by_quantile(quantile_returns,
            title='''Cumulative Return by Quantile
                     ({} Period Forward Return)'''.format(period),
            xlabel='',
-           yscale='symlog',
-           yticks=np.linspace(ymin, ymax, 5),
-           ylim=(ymin, ymax))
+           #yscale='symlog',
+           #yticks=np.linspace(ymin, ymax, 5),
+           #ylim=(ymin, ymax)),
+            )
 
     ax.yaxis.set_major_formatter(ScalarFormatter())
     ax.axhline(1.0, linestyle='-', color='black', lw=1)
@@ -887,9 +888,10 @@ def plot_cumulative_returns_by_top_mkt(mean_quant_ret_bydate,
            title='''Cumulative Return by Top Quantile & Market Index
                     ({} Period Forward Return)'''.format(period),
            xlabel='',
-           yscale='symlog',
-           yticks=np.linspace(ymin, ymax, 5),
-           ylim=(ymin, ymax))
+           #yscale='symlog',
+           #yticks=np.linspace(ymin, ymax, 5),
+           #ylim=(ymin, ymax),
+           )
 
     ax.yaxis.set_major_formatter(ScalarFormatter())
     ax.axhline(1.0, linestyle='-', color='black', lw=1)
