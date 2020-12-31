@@ -1,5 +1,5 @@
 #%%
-# For debugging
+#reload package, for debugging
 %reload_ext autoreload
 %autoreload 2
 import sys
@@ -60,12 +60,14 @@ factor_data = alphalens.utils.get_clean_factor_and_forward_returns( my_factor,
 
 
 market_data1=alphalens.utils.compute_market_index_forward_returns(factor_data.index.levels[0],market_data,periods=(1, 5, 10))
-#%%
+
 # Run analysis
 #group_neutral指是否对每一个group的收益率demean，需要factor_data里面有group标记
 #long_short指是否对所有收益率demean
 alphalens.tears.create_full_tear_sheet(factor_data,index_name=market_index_name,market_index=market_data1,group_neutral=False,long_short=False)
 #alphalens.tears.create_information_tear_sheet(factor_data)
+# %%
+
 # %%
 
 # %%

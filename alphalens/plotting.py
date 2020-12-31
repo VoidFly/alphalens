@@ -218,35 +218,54 @@ def plot_ic_ts(ic, ax=None):
         ax = np.asarray([ax]).flatten()
 
     ymin, ymax = (None, None)
+    ymin2, ymax2 = (None, None)
+    ax2=[]
     for a, (period_num, ic) in zip(ax, ic.iteritems()):
-        ic.plot(alpha=0.7, ax=a, lw=0.7, color='steelblue')
+        ic.plot(alpha=0.5, ax=a, lw=0.7, color='steelblue')
         ic.rolling(window=22).mean().plot(
             ax=a,
             color='forestgreen',
             lw=2,
             alpha=0.8
         )
-        #在这里加入ic 的cumsum
-
-
+        a2=a.twinx()
+        ic.cumsum().plot(
+            ax=a2,
+            color='firebrick',
+            lw=1,
+            alpha=0.8
+        )
+        
         a.set(ylabel='IC', xlabel="")
         a.set_title(
             "{} Period Forward Return Information Coefficient (IC)"
             .format(period_num))
         a.axhline(0.0, linestyle='-', color='black', lw=1, alpha=0.8)
-        a.legend(['IC', '1 month moving avg'], loc='upper right')
+        a.legend(['IC', '1 month moving avg'], loc='lower right')
         a.text(.05, .95, "Mean %.3f \n Std. %.3f" % (ic.mean(), ic.std()),
                fontsize=16,
                bbox={'facecolor': 'white', 'alpha': 1, 'pad': 5},
                transform=a.transAxes,
                verticalalignment='top')
 
+        a2.set_ylabel('IC_cumsum')
+        a2.legend(['IC_cumsum'], loc='upper right')
+
+        ax2.append(a2)
+    
         curr_ymin, curr_ymax = a.get_ylim()
         ymin = curr_ymin if ymin is None else min(ymin, curr_ymin)
         ymax = curr_ymax if ymax is None else max(ymax, curr_ymax)
+        
+        curr_ymin2, curr_ymax2 = a2.get_ylim()
+        ymin2 = curr_ymin2 if ymin2 is None else min(ymin2, curr_ymin2)
+        ymax2 = curr_ymax2 if ymax2 is None else max(ymax2, curr_ymax2)
 
     for a in ax:
         a.set_ylim([ymin, ymax])
+
+    for a2 in ax2:
+        a2.set_ylim([ymin2, ymax2])
 
     return ax
 
