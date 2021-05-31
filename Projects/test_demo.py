@@ -6,8 +6,8 @@ import sys
 sys.path.append("..")
 import alphalens
 import pandas as pd
-import pymssql
-conn = pymssql.connect(host='192.168.0.144', user='readonly', password='readonly', database='jydb')
+# import pymssql
+# conn = pymssql.connect(host='192.168.0.144', user='readonly', password='readonly', database='jydb')
 
 factor_path='./data/my_factor.csv'
 prices_path='./data/pricing.csv'
@@ -24,21 +24,21 @@ prices=pd.read_csv(prices_path,index_col=['date'],parse_dates=True)
 #prices['date']=pd.to_datetime(prices['date'])
 #prices=prices.set_index('date')
 
-market_index_name='000300'
+# market_index_name='000300'
 
-sql='''
-select a.TradingDay, a.ClosePrice from jydb.dbo.QT_IndexQuote a
-left join jydb.dbo.SecuMain b
-on a.InnerCode = b.InnerCode
-where b.SecuCode = '000300' and a.TradingDay >= '{}' and a.TradingDay <= '{}'
-order by a.TradingDay
-'''.format(prices.index.min(),prices.index.max())
+# sql='''
+# select a.TradingDay, a.ClosePrice from jydb.dbo.QT_IndexQuote a
+# left join jydb.dbo.SecuMain b
+# on a.InnerCode = b.InnerCode
+# where b.SecuCode = '000300' and a.TradingDay >= '{}' and a.TradingDay <= '{}'
+# order by a.TradingDay
+# '''.format(prices.index.min(),prices.index.max())
 
-market_data=pd.read_sql(sql,conn)
-conn.close()
-market_data=market_data.set_index('TradingDay')
-market_data.index.name='date'
-market_data=market_data.shift(-1)
+# market_data=pd.read_sql(sql,conn)
+# conn.close()
+# market_data=market_data.set_index('TradingDay')
+# market_data.index.name='date'
+# market_data=market_data.shift(-1)
 
 
 #%%#dict-> group_code:group_name为了在画图中显示行业名称
@@ -57,17 +57,12 @@ factor_data = alphalens.utils.get_clean_factor_and_forward_returns( my_factor,
                                                                     cumulative_returns=True)
 
 
-
-
-market_data1=alphalens.utils.compute_market_index_forward_returns(factor_data.index.levels[0],market_data,periods=(1, 5, 10))
+# market_data1=alphalens.utils.compute_market_index_forward_returns(factor_data.index.levels[0],market_data,periods=(1, 5, 10))
 
 # Run analysis
 #group_neutral指是否对每一个group的收益率demean，需要factor_data里面有group标记
 #long_short指是否对所有收益率demean
-alphalens.tears.create_full_tear_sheet(factor_data,index_name=market_index_name,market_index=market_data1,group_neutral=False,long_short=False)
+alphalens.tears.create_full_tear_sheet(factor_data,index_name=None,market_index=None,group_neutral=False,long_short=False)
 #alphalens.tears.create_information_tear_sheet(factor_data)
-# %%
-
-# %%
 
 # %%

@@ -484,7 +484,7 @@ def demean_forward_returns(factor_data, grouper=None):
     """
 
     factor_data = factor_data.copy()
-    factor_data.to_csv('C:/Projects/factor_data.csv')
+    #factor_data.to_csv('C:/Projects/factor_data.csv')
 
     if not grouper:
         grouper = factor_data.index.get_level_values('date')
